@@ -53,6 +53,9 @@ const int echopin1 = 5;
 const int trigpin2 = 6;
 const int echopin2 = 7;
 
+const int fullPin1 = 15;
+const int fullPin2 = 16;
+
 //Angle range
 const int MIN_ANGLE = -180;
 const int MAX_ANGLE = 180;
@@ -100,6 +103,10 @@ void setup() {
   pinMode(echopin1, INPUT);
   pinMode(trigpin2, OUTPUT);
   pinMode(echopin2, INPUT);
+
+  //Full level sensor setup
+  pinMode(fullPin1, INPUT);
+  pinMode(fullPin2, INPUT);
   
   // Set up of tasks
   xTaskCreate(objDetect, "Objection Detection Task", 1000, NULL, 1, NULL);
@@ -271,10 +278,15 @@ void motion(void *pvParameters){
 void garbage(uint32_t distance1, uint32_t distance2) {
   // where code for garbage collection will be sitting. Monitoring of sensors/fullness level. Also allows for some small amount of motor control to make sure platform stays put.
   // create a while loop here that makes it so the garbage collection stays active so long as the full sensors have not been reached. Need to add in the pins and pinmode for the full level sensors
-  if((distance1 == 75) || (distance2 == 75)){
-    control_servo(&distance1, &distance2);
+  while(!fullPin1 || !fullPin2){
+    if((distance1 == 75) || (distance2 == 75)){
+      control_servo(&distance1, &distance2);
+    }
+    else if((fullPin1 && fullPin2) == true){
+      offload();
+      break;
+    }
   }
-  //add if loop that upon detecting full level sensor will call full() setting signal from false to true and break while loop
 }
 
 void offLoad (){
