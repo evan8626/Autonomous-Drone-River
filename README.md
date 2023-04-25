@@ -15,3 +15,10 @@ to sensors in real-time. I will also be using a Raspberry Pi 3B running ROS to a
 practices and how I want my robot to function. 
 
 Stay tuned for progress updates.
+
+SIL (software-in-the-loop) testing plan: create a simulated environment to run the code in to see if the tasks of the robot are responding as they 
+should. This will include GPS readings, reading from ultrasonic sensors, and readings from LiDAR sensors. SIL testing will also cover the states of the robot to be sure the 
+states are changing as they should and when they should.
+
+HIL (hardware-in-the-loop) testing plan: create a mock circuit with cheap off the shelf components for testing the functionality of the robot. If there resources are there 
+create a small scale prototype that can be deployed and put into a body of water.
