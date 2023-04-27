@@ -75,17 +75,39 @@ enum robotState{
   INIT_POS,
   DESIGNATED_LOC,
   RETURN_TO_INIT,
-  WAIT_FOR_FULL
+  TRAVEL_TO_DESIGNATED
 };
 
 robotState currentState = INIT_POS;
 
+//passed GPS coordinates from RPi
+double initial_latitude = 0;
+double initial_longitude = 0;
+double designated_latitude = 0;
+double designated_longitude = 0;
+double current_latitude = 0;
+double current_longitude = 0;
+
+//allowing interruption for simultaneous reading of ultrasonic sensors
 void echoInterrupt1();
 void echoInterrupt2();
 
 void setup() {
   // Initailization of communication hardware (subject to change, this is the RF24  
   Serial.begin(115200); // setting serial communication rate to 115200 meant for setup of serial comm between Arduino and RPi
+  // Wait for initial position from Raspberry Pi
+  while (!Serial.available()) {
+    delay(100);
+  }
+  initial_latitude = read_double_from_serial();
+  initial_longitude = read_double_from_serial();
+
+  // Wait for designated position from Raspberry Pi
+  while (!Serial.available()) {
+    delay(100);
+  }
+  designated_latitude = read_double_from_serial();
+  designated_longitude = read_double_from_serial();
   distanceQueue = xQueueCreate(1, sizeof(uint32_t) * 2); // Distance passing queue setup
 //  radio.begin(); //starts radio
 //  radio.setPALevel(RF24_PA_MIN); //Sets pwr amplification level, subject to change
@@ -129,7 +151,6 @@ void setup() {
   // Set up of tasks
   xTaskCreate(objDetect, "Objection Detection Task", 1000, NULL, 1, NULL);
   xTaskCreate(motion, "Motion Task", 1000, NULL, 2, NULL);
-  //xTaskCreate(GPS, "Location Task", 128, NULL, 3, NULL);
 
   // Starting the scheduler. Must be started here otherwise tasks will not run.
   vTaskStartScheduler();
@@ -180,11 +201,11 @@ int calc_angle(int32_t distance1, int32_t distance2){
 }
 
 bool designated_location_reached(){
-  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a 
+  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a state
 }
 
 bool init_pos_reached(){
-  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a 
+  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a state
 }
 
 bool full(){
@@ -257,22 +278,6 @@ void motion(void *pvParameters){
    }
  }
 
-// Commenting this out for the time being as I have no GPS module to hardwire to the Ardiuno. Plus, this may work better on the RPi connection.
-//void GPS(void *pvParameters){
-//
-//  // Code for GPS location
-//  (void) pvParameters;
-//
-//  for(;;){
-//    //GPS signaling 
-//    //...
-//
-//    //vTaskDelay to avoid deadlocks
-//    vTaskDelay(pdMS_TO_TICKS(100)); //100 miliseconds
-//  }
-//  
-//}
-
 void garbage(uint32_t distance1, uint32_t distance2) {
   // where code for garbage collection will be sitting. Monitoring of sensors/fullness level. Also allows for some small amount of motor control to make sure platform stays put.
   // create a while loop here that makes it so the garbage collection stays active so long as the full sensors have not been reached. Need to add in the pins and pinmode for the full level sensors
@@ -292,6 +297,7 @@ void offLoad (){
   // function for offloading collected garbage
   //once emptied, will call full() and set signal from true to false
   
+  
 }
 
 void loop(){
@@ -299,14 +305,24 @@ void loop(){
   uint32_t distance2;
 
   ultraSonic_sensor(&distance1, &distance2);
-
+  // Read current GPS coordinates from Raspberry Pi
+  if (Serial.available()) {
+    current_latitude = read_double_from_serial();
+    current_longitude = read_double_from_serial();
+  }
   switch (currentState) {
     case INIT_POS:
       // Move robot to the designated location
       control_servo(distance1, distance2);
+      currentState = TRAVEL_TO_DESIGNATED;
+      break;
+
+    case TRAVEL_TO_DESIGNATED:
       // Check if the robot has reached the designated location and update the state
-      if (designated_location_reached()) {
-        currentState = WAIT_FOR_FULL;
+      if (designated_location_reached(current_latitude, current_longitude, designated_latitude, designated_longitude)) {
+        currentState = DESIGNATED_LOC;
+      } else {
+        control_servo(distance1, distance2);
       }
       break;
 
@@ -315,8 +331,8 @@ void loop(){
       if (check_for_movement_conditions(distance1, distance2)) {
         control_servo(distance1, distance2);
         // Check if the robot has reached the designated location and update the state
-        if (designated_location_reached()) {
-          currentState = WAIT_FOR_FULL;
+        if (designated_location_reached(current_latitude, current_longitude, designated_latitude, designated_longitude)) {
+          currentState = RETURN_TO_INIT;
         }
       }
       break;
@@ -325,14 +341,8 @@ void loop(){
       // Move robot back to the initial position
       control_servo(distance1, distance2);
       // Check if the robot has reached the initial position and update the state
-      if (init_pos_reached()) {
+      if (init_pos_reached(current_latitude, current_longitude, initial_latitude, initial_longitude)) {
         currentState = INIT_POS;
-      }
-      break;
-
-    case WAIT_FOR_FULL:
-      if (full()) {
-        currentState = DESIGNATED_LOC;
       }
       break;
   }
