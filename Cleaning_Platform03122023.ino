@@ -44,7 +44,7 @@ const int echopin2 = 7;
 const int fullPin1 = 15;
 const int fullPin2 = 16;
 //Full indication
-bool full = false;
+bool fullInd = false;
 
 volatile unsigned long startTime1, startTime2, endTime1, endTime2;
 volatile bool echoState1, echoState2;
@@ -190,10 +190,10 @@ bool init_pos_reached(){
 bool full(){
   //sets a signal from false to true when garbage function detects full signal
   if((fullpin1 && fullpin2) == HIGH){
-    full = true;
+    fullInd = true;
   }
   else{
-    full = false;
+    fullInd = false;
   }
 }
 
