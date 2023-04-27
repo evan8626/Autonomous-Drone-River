@@ -1,4 +1,5 @@
 //#include <Adafruit_VL53L0X.h> // library for LiDar sensor must download Adafruit_VL53L0X latest version
+#include <Arduino.h>
 #include <Arduino_FreeRTOS.h> // library for FreeRTOS to run on arduino
 #include <SPI.h> // SPI communication protocol header
 //#include <RF24.h> // Radio communication header must install RF24 by TMRh20 v 1.4.6 library for this to work
@@ -156,6 +157,22 @@ void setup() {
   vTaskStartScheduler();
 }
 
+double read_double_from_serial() {
+  double value;
+  char buffer[32];
+  int index = 0;
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n') {
+      buffer[index] = '\0';
+      break;
+    }
+    buffer[index++] = c;
+  }
+  value = atof(buffer);
+  return value;
+}
+
 //Ultrasonic sensor function to determine distance
 void ultraSonic_sensor(uint32_t *distance1, uint32_t *distance2){
   long dur1 = 0, dur2 = 0; //timers to determine how long it takes a signal to travel from the ultrasonic sensor and back again
@@ -200,17 +217,20 @@ int calc_angle(int32_t distance1, int32_t distance2){
   return angle;
 }
 
-bool designated_location_reached(){
-  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a state
-}
-
-bool init_pos_reached(){
-  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a state
-}
+//bool designated_location_reached(&current_latitude, &current_longitude, &designated_latitude, &designated_longitude){
+//  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a state
+//  if ((current_latitude == designated_latitude) && (current_longitude == designated_longitude)){
+//    currentState = DESIGNATED_LOC;
+//  }
+//}
+//
+//bool init_pos_reached(){
+//  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a state
+//}
 
 bool full(){
   //sets a signal from false to true when garbage function detects full signal
-  if((fullpin1 && fullpin2) == HIGH){
+  if((fullPin1 && fullPin2) == HIGH){
     fullInd = true;
   }
   else{
@@ -313,14 +333,16 @@ void loop(){
   switch (currentState) {
     case INIT_POS:
       // Move robot to the designated location
-      control_servo(distance1, distance2);
-      currentState = TRAVEL_TO_DESIGNATED;
+      if(!fullPin1 && !fullPin2){
+        control_servo(distance1, distance2);
+        currentState = TRAVEL_TO_DESIGNATED;
+      }
       break;
 
     case TRAVEL_TO_DESIGNATED:
       // Check if the robot has reached the designated location and update the state
-      if (designated_location_reached(current_latitude, current_longitude, designated_latitude, designated_longitude)) {
-        currentState = DESIGNATED_LOC;
+      if ((current_latitude == designated_latitude) && (current_longitude == designated_longitude)) {
+          currentState = DESIGNATED_LOC;
       } else {
         control_servo(distance1, distance2);
       }
@@ -328,10 +350,11 @@ void loop(){
 
     case DESIGNATED_LOC:
       // Check if there is an object too close to the robot or if it drifted away
-      if (check_for_movement_conditions(distance1, distance2)) {
+      if ((!fullPin1 && !fullPin2) && check_for_movement_conditions(distance1, distance2)) {
         control_servo(distance1, distance2);
         // Check if the robot has reached the designated location and update the state
-        if (designated_location_reached(current_latitude, current_longitude, designated_latitude, designated_longitude)) {
+        if (fullPin1 && fullPin2) {
+          control_servo(distance1, distance2);
           currentState = RETURN_TO_INIT;
         }
       }
@@ -341,7 +364,7 @@ void loop(){
       // Move robot back to the initial position
       control_servo(distance1, distance2);
       // Check if the robot has reached the initial position and update the state
-      if (init_pos_reached(current_latitude, current_longitude, initial_latitude, initial_longitude)) {
+      if ((current_latitude == initial_latitude) && (current_longitude == initial_longitude)) {
         currentState = INIT_POS;
       }
       break;
