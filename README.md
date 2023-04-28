@@ -22,3 +22,10 @@ states are changing as they should and when they should.
 
 HIL (hardware-in-the-loop) testing plan: create a mock circuit with cheap off the shelf components for testing the functionality of the robot. If there resources are there 
 create a small scale prototype that can be deployed and put into a body of water.
+
+short term: 1 - 2 weeks
+medium term: 4 - 5 weeks
+long term: 5 - 7 weeks
+
+4/27/2023
+Next steps are to finish the offload function (short term), get and program a LiDAR sensor for Arduino (short term - medium term). write a CMake file, a test script, and a CI file to verify functionality (medium term). Write SIL testing env, and create circuit/hardware setup for HIL testing (long term).
