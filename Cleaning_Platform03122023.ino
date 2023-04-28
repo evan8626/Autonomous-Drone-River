@@ -2,7 +2,6 @@
 #include <Arduino.h>
 #include <Arduino_FreeRTOS.h> // library for FreeRTOS to run on arduino
 #include <SPI.h> // SPI communication protocol header
-//#include <RF24.h> // Radio communication header must install RF24 by TMRh20 v 1.4.6 library for this to work
 #include <semphr.h> // semaphore header file
 #include <Servo.h> //servo header file
 #include <PID_v1.h>
@@ -15,11 +14,6 @@ QueueHandle_t distanceQueue;
 //function prototypes for tasks. The 'void *pvParameters' may change.
 void objDetect(void *pvParameters);
 void motion(void *pvParameters);
-//void GPS(void *pvParameters);
-
-//No Arduino compatible radio transceiver yet
-// Create an RF24 object
-//RF24 radio(10, 11); // CE, CSN pins
 
 //const uint64_t pipe = 0xE8E8F0F0E1LL; // Address of the radio pipe. This address will more than likely change
 //const char text[] = "Hello, world!";
@@ -110,11 +104,6 @@ void setup() {
   designated_latitude = read_double_from_serial();
   designated_longitude = read_double_from_serial();
   distanceQueue = xQueueCreate(1, sizeof(uint32_t) * 2); // Distance passing queue setup
-//  radio.begin(); //starts radio
-//  radio.setPALevel(RF24_PA_MIN); //Sets pwr amplification level, subject to change
-//  radio.setChannel(76); //Sets RF channel, subject to change
-//  radio.openReadingPipe(1, pipe); //Sets addres of radio pipe
-//  radio.startListening(); //Sets radio to receive mode
   
   // Initialization of all motors (DC, Servo)
   pinMode(dcMotor1, OUTPUT); //driving motor
@@ -216,17 +205,6 @@ int calc_angle(int32_t distance1, int32_t distance2){
 
   return angle;
 }
-
-//bool designated_location_reached(&current_latitude, &current_longitude, &designated_latitude, &designated_longitude){
-//  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a state
-//  if ((current_latitude == designated_latitude) && (current_longitude == designated_longitude)){
-//    currentState = DESIGNATED_LOC;
-//  }
-//}
-//
-//bool init_pos_reached(){
-//  //This will be determined via GPS, once GPS module is here and coded a true false variable as well as a state
-//}
 
 bool full(){
   //sets a signal from false to true when garbage function detects full signal
