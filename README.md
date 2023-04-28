@@ -20,8 +20,8 @@ SIL (software-in-the-loop) testing plan: create a simulated environment to run t
 should. This will include GPS readings, reading from ultrasonic sensors, and readings from LiDAR sensors. SIL testing will also cover the states of the robot to be sure the 
 states are changing as they should and when they should.
 
-HIL (hardware-in-the-loop) testing plan: create a mock circuit with cheap off the shelf components for testing the functionality of the robot. If there resources are there 
-create a small scale prototype that can be deployed and put into a body of water.
+HIL (hardware-in-the-loop) testing plan: create a mock circuit with cheap off the shelf components for testing the functionality of the robot. If the resources are available 
+create a small scale prototype that can then be deployed and put into a small body of water.
 
 short term: 1 - 2 weeks |
 medium term: 4 - 5 weeks |
