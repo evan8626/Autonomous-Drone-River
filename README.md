@@ -4,7 +4,7 @@ lakes. This project will initially take place on the Maumee river near Toledo, O
 
 As the project is now, it's nothing more than a proof of concept and a way for me to learn more about project requirements for a robotics clean up project like this. 
 No doubt, as I create the first working prototype there will be stumbling blocks I will have to overcome. I am expecting those to be learning how to use FreeRTOS, how to use
-ROS, and getting comfortable with being uncomfortable. 
+ROS, and getting comfortable with being uncomfortable. This is currently written in C++ using an Arduino, however the Arduino have some limiting factors that aren't quite what is needed for this project. Once a functioning prototype is created from the Arduino system, a transition will be made to a STM32 nucleo board.
 
 If I am able to make this a prototype that can prove this concept I hope to create a fleet of these robotic platforms in the Maumee to not only collect waste, but hopefully
 clean the water to prevent major algae blooms from occurring on Lake Erie. Additionally, I'd be happy to take water data from the Maumee and give it to local water treatment
